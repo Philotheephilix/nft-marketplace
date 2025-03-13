@@ -14,7 +14,11 @@ import { useStyles } from "./styles.js";
 
 const Item = () => {
   const classes = useStyles();
+  const [priceInput, setPriceInput] = useState("");
 
+  const handlePriceChange = (event) => {
+    setPriceInput(event.target.value);
+  };
   const { nftId } = useParams();
   const marketplaceContract = useSelector(
     (state) => state.allNft.marketplaceContract
@@ -45,36 +49,37 @@ const Item = () => {
     };
   }, [nftId]);
 
-  async function putForSale(id, price) {
+  async function putForSale(tokenId, priceInEther) {
     try {
-      // const itemIdex = getItemIndexBuyTokenId(id);
-
-      // const marketAddress = ArtMarketplace.networks[1337].address;
-      // await artTokenContract.methods.approve(marketAddress, items[itemIdex].tokenId).send({from: accounts[0]});
-
+      const priceInWei = Web3.utils.toWei(priceInEther.toString(), "ether");
+  
       const receipt = await marketplaceContract.methods
-        .putItemForSale(id, price)
+        .putItemForSale(tokenId, priceInWei)
         .send({ gas: 210000, from: account });
+  
       console.log(receipt);
+      alert("Item listed for sale successfully!");
     } catch (error) {
-      console.error("Error, puting for sale: ", error);
-      alert("Error while puting for sale!");
+      console.error("Error listing for sale: ", error);
+      alert("Error while listing for sale!");
     }
   }
 
-  async function buy(saleId, price) {
+  async function buy(saleId, priceInEther) {
     try {
+      const priceInWei = priceInEther;
+  
       const receipt = await marketplaceContract.methods
         .buyItem(saleId)
-        .send({ gas: 210000, value: price, from: account });
+        .send({ gas: 210000, value: priceInWei, from: account });
+  
       console.log(receipt);
-      const id = receipt.events.itemSold.id; ///saleId
+      alert("Item purchased successfully!");
     } catch (error) {
-      console.error("Error, buying: ", error);
-      alert("Error while buying!");
+      console.error("Error purchasing item: ", error);
+      alert("Error while purchasing item!");
     }
   }
-
   return (
     <div className={classes.pageItem}>
       {Object.keys(nft).length === 0 ? (
@@ -147,21 +152,37 @@ const Item = () => {
                     disabled
                   />
                   {owner === account && !isForSale && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => putForSale(tokenId, 200)}
-                    >
-                      Sell
-                    </Button>
+                    <div>
+                      <TextField
+                        label="Price (ETH)"
+                        name="price"
+                        variant="filled"
+                        margin="dense"
+                        value={priceInput}
+                        onChange={handlePriceChange}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">ETH</InputAdornment>
+                          ),
+                        }}
+                        fullWidth
+                      />
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => putForSale(tokenId, priceInput)}
+                      >
+                        Sell
+                      </Button>
+                    </div>
                   )}
                   {owner !== account && isForSale && (
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => buy(saleId, 200)}
+                      onClick={() => buy(saleId, price)}
                     >
-                      Buy
+                      Buy for {Web3.utils.fromWei(String(price), "ether")} ETH
                     </Button>
                   )}
                 </fieldset>

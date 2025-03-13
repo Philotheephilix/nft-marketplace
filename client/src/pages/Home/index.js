@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import Button from '@material-ui/core/Button';
 
 import getWeb3 from "../../utils/getWeb3";
 import { api } from "../../services/api";
@@ -19,21 +18,8 @@ import {
 } from "../../redux/actions/nftActions";
 import Card from "../../components/Card";
 
-import { useStyles } from "./styles.js";
-
-import veterans from "../../assets/arts/Sparse-Ahmed-Mostafa-vetarans-2.jpg";
-import lionKing from "../../assets/arts/suresh-pydikondala-lion.jpg";
-import dreaming from "../../assets/arts/phuongvp-maybe-i-m-dreaming-by-pvpgk-deggyli.jpg";
-import modeling3d from "../../assets/arts/alan-linssen-alanlinssen-kitbashkitrender2.jpg";
-import woman from "../../assets/arts/ashline-sketch-brushes-3-2.jpg";
-import stones from "../../assets/arts/rentao_-22-10-.jpg";
-import wale from "../../assets/arts/luzhan-liu-1-1500.jpg";
-import comic from "../../assets/arts/daniel-taylor-black-and-white-2019-2.jpg";
-import galerie from "../../assets/galerie.svg";
-
 
 const Home = () => {
-  const classes = useStyles();
   const nft = useSelector((state) => state.allNft.nft);
   const dispatch = useDispatch();
 
@@ -142,69 +128,52 @@ const Home = () => {
   const nftItem = useSelector((state) => state.allNft.nft);
 
   return (
-    <div className={classes.homepage}>
-      <section className={classes.banner}>
-        <Grid container spacing={0} xs={12} className={classes.gridBanner}>
-          <Grid item xs={3}>
-            <Grid container spacing={0}>
-              <Grid item xs={8}>
-                <img src={dreaming} alt="dreaming" className={classes.images} />
-              </Grid>
-              <Grid item xs={4}>
-                <img src={veterans} alt="veterans" className={classes.images} />
-              </Grid>
-              <Grid item xs={7}>
-                <img src={modeling3d} alt="modeling3d" className={classes.images} />
-              </Grid>
-              <Grid item xs={5}>
-                <img src={lionKing} alt="lionKing" className={classes.images} />
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={6} className={classes.main}>
-            <img src={galerie} alt="galerie" />
-            <Typography>A decentralized NFT marketplace where you can expose your art.</Typography>
+    <div className="App" style={{backgroundColor: "black"}}>
+      <div className="image-wrapper">
+        <img
+          src="/PHOTO-2025-01-20-13-02-12.jpg"
+          alt="New Hero Image"
+          width={200}
+          height={100}
+        />
+      </div>
+
+      <div className="hero-text">
+        <h1 className="hero-title">
+          <span className="hero-subtitle">The world of pixel animals</span>
+          <br />
+          pixel animals
+        </h1>
+
+        <p className="hero-description">
+          Discover unique digital pixel animals in our NFT marketplace.
+          Each piece is a carefully crafted pixel art creation,
+          bringing adorable creatures to the blockchain.
+        </p>
+
+        <div className="mint-button-wrapper">
+          <section className="banner">
             <Link to="/create-nft">
-              <Button variant="contained" color="primary" disableElevation>
                 Mint your art
-              </Button>
             </Link>
+          </section>
+        </div>
+      </div>
+
+      <div className="homepage">
+        <section className="all-nfts">
+          <Typography className="nft-title">Latest artwork</Typography>
+          <Grid container direction="row" justifyContent="center" alignItems="center" spacing={2}>
+            {nftItem.map((nft) => (
+              <Grid item key={nft.tokenId}>
+                <Card {...nft} />
+              </Grid>
+            ))}
           </Grid>
-          <Grid item xs={3}>
-            <Grid container spacing={0}>
-              <Grid item xs={8}>
-                <img src={stones} alt="dreaming" className={classes.images} />
-              </Grid>
-              <Grid item xs={4}>
-                <img src={woman} alt="veterans" className={classes.images} />
-              </Grid>
-              <Grid item xs={7}>
-                <img src={wale} alt="modeling3d" className={classes.images} />
-              </Grid>
-              <Grid item xs={5}>
-                <img src={comic} alt="lionKing" className={classes.images} />
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </section>
-      <section className={classes.allNfts}>
-        <Typography className={classes.title}>Latest artwork</Typography>
-        <Grid
-          container
-          direction="row"
-          justifyContent="center"
-          alignItems="center"
-          spacing={2}
-        >
-          {nftItem.map((nft) => (
-            <Grid item key={nft.tokenId}>
-              <Card {...nft} />
-            </Grid>
-          ))}
-        </Grid>
-      </section>
+        </section>
+      </div>
     </div>
+
   );
 };
 

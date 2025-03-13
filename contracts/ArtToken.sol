@@ -26,7 +26,7 @@ contract ArtToken is ERC721Enumerable, ERC721URIStorage {
         uint256 newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
         _setTokenURI(newItemId, uri); // crucial if you use ERC721URIStorage
-        approve(marketplace, newItemId);
+        approve(marketplace, newItemId);    
 
         Items[newItemId] = Item({
             id: newItemId,

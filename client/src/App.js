@@ -11,7 +11,7 @@ import "./App.css";
 
 function App() {
   return (
-    <div className="App">
+    <div style={{backgroundColor: "#f5f5f5"}}>
       <Router>
         <Header />
         <Switch>
@@ -20,7 +20,7 @@ function App() {
           <Route path="/nft/:nftId" component={Item} />
           <Route>404 Not Found!</Route>
         </Switch>
-      </Router>
+      </Router> 
     </div>
   );
 }
