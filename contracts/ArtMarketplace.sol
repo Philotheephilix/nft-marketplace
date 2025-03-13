@@ -98,18 +98,21 @@ contract ArtMarketplace {
     }
 
     // Make an offer on an item
-    function makeOffer(uint256 tokenId) external payable {
-        require(activeItems[tokenId], "Item not for sale");
-        require(msg.value > 0, "Offer must be greater than 0");
+function makeOffer(uint256 tokenId) external payable {
+    require(activeItems[tokenId], "Item not for sale");
+    require(msg.value > 0, "Offer must be greater than 0");
 
-        offers[tokenId].push(Offer({
-            bidder: msg.sender,
-            amount: msg.value,
-            accepted: false
-        }));
+    // TEMP DEBUG
+    require(tokenId != 999999, "Trigger test revert");
 
-        emit OfferMade(tokenId, msg.sender, msg.value);
-    }
+    offers[tokenId].push(Offer({
+        bidder: msg.sender,
+        amount: msg.value,
+        accepted: false
+    }));
+
+    emit OfferMade(tokenId, msg.sender, msg.value);
+}
 
     // Accept an offer
     function acceptOffer(uint256 tokenId, uint256 offerIndex) external OnlyItemOwner(tokenId) {
