@@ -22,12 +22,15 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^16.4.7",
+    "ethers": "^5.8.0",
+    "hardhat": "^2.22.19",
     "postcss": "^8.5.3",
-    "postcss-flexbugs-fixes": "^5.0.2",
     "tailwindcss": "^4.0.14"
   },
   "scripts": {

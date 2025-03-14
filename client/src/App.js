@@ -11,7 +11,7 @@ import "./App.css";
 
 function App() {
   return (
-    <div style={{backgroundColor: "#f5f5f5"}}>
+    <div style={{backgroundColor: "#f5f5f5"}} className="flex flex-col items-center justify-center min-h-screen">
       <Router>
         <Header />
         <Switch>
