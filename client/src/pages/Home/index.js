@@ -52,42 +52,92 @@ const Home = () => {
 
   console.log("Nft :", nft);
 
-
   return (
-    <div className="App" style={{backgroundColor: "black"}}>
-      <div className="image-wrapper">
+    <div style={styles.container}>
+      <div style={styles.contentWrapper}>
         <img
           src="/PHOTO-2025-01-20-13-02-12.jpg"
-          alt="New Hero Image"
-          width={200}
-          height={100}
+          alt="Hero"
+          style={styles.heroImage}
         />
-      </div>
-
-      <div className="hero-text">
-        <h1 className="hero-title">
-          <span className="hero-subtitle">The world of pixel animals</span>
-          <br />
-          pixel animals
-        </h1>
-
-        <p className="hero-description">
-          Discover unique digital pixel animals in our NFT marketplace.
-          Each piece is a carefully crafted pixel art creation,
-          bringing adorable creatures to the blockchain.
-        </p>
-
-        <div className="mint-button-wrapper">
-          <section className="banner">
-            <Link to="/create-nft">
-                Mint your art
-            </Link>
-          </section>
+        <div style={styles.textContent}>
+          <h1 style={styles.heroTitle}>
+            <span style={styles.heroSubtitle}>The world of pixel animals</span>
+            <br />
+            Pixel Animals
+          </h1>
+          <p style={styles.description}>
+            Discover unique digital pixel animals in our NFT marketplace.
+            Each piece is a carefully crafted pixel art creation,
+            bringing adorable creatures to the blockchain.
+          </p>
+          <Link to="/create-nft" style={styles.mintButton}>
+            Mint Your Art
+          </Link>
         </div>
       </div>
     </div>
-
   );
+};
+
+const styles = {
+  container: {
+    backgroundColor: "#000000",
+    color: "white",
+    height: "100vh",
+    width: "100vw",
+    padding: 0,
+    margin: 0,
+    overflow: "hidden",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  },
+  contentWrapper: {
+    maxWidth: "1200px",
+    width: "90%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "2rem",
+  },
+  heroImage: {
+    borderRadius: "1rem",
+    width: "400px",
+    height: "auto",
+    objectFit: "cover",
+    boxShadow: "0 0 20px rgba(255, 255, 255, 0.2)",
+  },
+  textContent: {
+    maxWidth: "600px",
+  },
+  heroTitle: {
+    fontSize: "3rem",
+    lineHeight: "1.2",
+    fontWeight: "700",
+    marginBottom: "1rem",
+  },
+  heroSubtitle: {
+    fontSize: "1.5rem",
+    color: "#facc15",
+  },
+  description: {
+    fontSize: "1.1rem",
+    marginBottom: "2rem",
+    color: "#d4d4d4",
+  },
+  mintButton: {
+    display: "inline-block",
+    padding: "0.75rem 1.5rem",
+    backgroundColor: "#22c55e",
+    color: "black",
+    borderRadius: "0.5rem",
+    fontWeight: "600",
+    textDecoration: "none",
+    transition: "background-color 0.3s ease",
+  },
 };
 
 export default Home;

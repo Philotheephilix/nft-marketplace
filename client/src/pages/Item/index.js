@@ -1,53 +1,60 @@
 import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardMedia,
+  TextField,
+  InputAdornment,
+  Button,
+  Divider,
+  CircularProgress,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Paper,
+} from "@material-ui/core";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
-import Button from "@material-ui/core/Button";
-import KeyboardBackspaceIcon from "@material-ui/icons/KeyboardBackspace";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import TextField from "@material-ui/core/TextField";
-import Grid from "@material-ui/core/Grid";
+import {
+  Check as CheckIcon,
+  Close as CloseIcon,
+  ArrowBack as ArrowBackIcon,
+} from "@material-ui/icons";
 import Web3 from "web3";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import IconButton from "@material-ui/core/IconButton";
-import CheckIcon from "@material-ui/icons/Check";
-import CloseIcon from "@material-ui/icons/Close";
-import Divider from "@material-ui/core/Divider";
-import Typography from "@material-ui/core/Typography";
 
-import { selectedNft, removeSelectedNft } from "../../redux/actions/nftActions";
-import { useStyles } from "./styles.js";
+import {
+  selectedNft,
+  removeSelectedNft,
+} from "../../redux/actions/nftActions";
+
+const softDark = "#1e1e1e";
+const lightGray = "#ccc";
+const sectionSpacing = { mt: 4, mb: 2 };
 
 const Item = () => {
-  const classes = useStyles();
   const [priceInput, setPriceInput] = useState("");
   const [offerAmount, setOfferAmount] = useState("");
   const [offers, setOffers] = useState([]);
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
 
-  const handlePriceChange = (event) => {
-    setPriceInput(event.target.value);
-  };
+  const dispatch = useDispatch();
+  const { nftId } = useParams();
 
-  const handleOfferChange = (event) => {
-    setOfferAmount(event.target.value);
-  };
-  const { 
-    marketplaceContract, 
-    artTokenContract,  // Match reducer property name
-    account 
-  } = useSelector((state) => state.allNft);
+  const { marketplaceContract, artTokenContract, account } = useSelector(
+    (state) => state.allNft
+  );
   const tokenContract = artTokenContract;
 
-  const { nftId } = useParams();
-  const marketplaceAddress = marketplaceContract?.options?.address;
+  const nftItem =
+    useSelector((state) =>
+      state.allNft.nft.find((nft) => nft.tokenId === nftId)
+    ) || {};
 
-  let nft = useSelector((state) => state.nft);  
-  let nftItem = useSelector((state) =>
-    state.allNft.nft.filter((nft) => nft.tokenId === nftId)
-  );
   const {
     image,
     name,
@@ -58,44 +65,39 @@ const Item = () => {
     tokenId,
     saleId,
     isForSale,
-    isSold,
-  } = nft;
-  const dispatch = useDispatch();
+  } = nftItem;
 
   useEffect(() => {
-    if (nftId && nftId !== "" && nftItem) dispatch(selectedNft(nftItem[0]));
-    return () => {
-      dispatch(removeSelectedNft());
-    };
+    if (nftId && nftItem) dispatch(selectedNft(nftItem));
+    return () => dispatch(removeSelectedNft());
   }, [nftId]);
 
   useEffect(() => {
-    if (tokenId) {
-      loadOffers();
-    }
+    if (tokenId) loadOffers();
   }, [tokenId, marketplaceContract]);
+
+  const handlePriceChange = (e) => setPriceInput(e.target.value);
+  const handleOfferChange = (e) => setOfferAmount(e.target.value);
 
   async function loadOffers() {
     if (!marketplaceContract || !tokenId) return;
-    
     setIsLoadingOffers(true);
     try {
-      // This is a simplified approach - in a real app, you would need to create events or query functions
-      // to get all offers for a specific token
-      const offerEvents = await marketplaceContract.getPastEvents('OfferMade', {
-        filter: { tokenId: tokenId },
-        fromBlock: 0,
-        toBlock: 'latest'
-      });
-      
-      const offersList = await Promise.all(offerEvents.map(async (event, index) => {
-        return {
-          bidder: event.returnValues.bidder,
-          amount: event.returnValues.amount,
-          index: index
-        };
+      const offerEvents = await marketplaceContract.getPastEvents(
+        "OfferMade",
+        {
+          filter: { tokenId },
+          fromBlock: 0,
+          toBlock: "latest",
+        }
+      );
+
+      const offersList = offerEvents.map((event, index) => ({
+        bidder: event.returnValues.bidder,
+        amount: event.returnValues.amount,
+        index,
       }));
-      
+
       setOffers(offersList);
     } catch (error) {
       console.error("Error loading offers:", error);
@@ -107,407 +109,313 @@ const Item = () => {
   async function putForSale(tokenId, priceInEther) {
     try {
       const priceInWei = Web3.utils.toWei(priceInEther.toString(), "ether");
-  
-      const receipt = await marketplaceContract.methods
+      await marketplaceContract.methods
         .putItemForSale(tokenId, priceInWei)
         .send({ gas: 210000, from: account });
-  
-      console.log(receipt);
       alert("Item listed for sale successfully!");
     } catch (error) {
-      console.error("Error listing for sale: ", error);
       alert("Error while listing for sale!");
+      console.error(error);
     }
   }
 
   async function buy(saleId, priceInEther) {
     try {
-      const priceInWei = priceInEther;
-  
-      const receipt = await marketplaceContract.methods
-        .buyItem(saleId)
-        .send({ gas: 210000, value: priceInWei, from: account });
-  
-      console.log(receipt);
-      alert("Item purchased successfully!");
+      await marketplaceContract.methods.buyItem(saleId).send({
+        gas: 210000,
+        value: priceInEther,
+        from: account,
+      });
+      alert("Item purchased!");
     } catch (error) {
-      console.error("Error purchasing item: ", error);
-      alert("Error while purchasing item!");
-    }
-  }
-  async function approveMarketplace(tokenId) {
-    try {
-      await tokenContract.methods
-        .approve(marketplaceAddress, tokenId)
-        .send({ from: account });
-      alert("Marketplace approved successfully!");
-    } catch (error) {
-      console.error("Approval failed:", error);
-      alert("Approval failed. Check console for details.");
+      alert("Error purchasing item.");
+      console.error(error);
     }
   }
 
   async function makeOffer(tokenId, amountInEther) {
-    // Validate contracts are loaded
-    if (!tokenContract || !marketplaceContract) {
-      alert("Contracts not initialized. Please refresh the page.");
-      return;
-    }
-    console.log("Making offer on tokenId:", tokenId);
-console.log("Active item:", await marketplaceContract.methods.activeItems(tokenId).call());
-console.log("Amount in Wei:", amountInEther);
-
-  
-    // Validate input amount
     const amount = parseFloat(amountInEther);
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid positive number for the offer amount");
-      return;
-    }
-  
+    if (!amount || amount <= 0) return alert("Enter a valid offer amount");
+
+    const amountInWei = Web3.utils.toWei(amount.toFixed(18), "ether");
+
     try {
-      // Convert ETH to Wei safely
-      const amountInWei = Web3.utils.toWei(amount.toFixed(18), "ether");
-  
-      // Get real-time owner from blockchain
-      const currentOwner = await tokenContract.methods
-        .ownerOf(tokenId)
-        .call();
-  
-      // Validate user isn't owner
-      if (currentOwner.toLowerCase() === account.toLowerCase()) {
-        alert("Error: You can't make offers on your own NFT");
-        return;
-      }
-  
-      // Get marketplace address safely
-      const marketplaceAddress = marketplaceContract.options.address;
-  
-      // Check approval status
+      const currentOwner = await tokenContract.methods.ownerOf(tokenId).call();
+      if (currentOwner.toLowerCase() === account.toLowerCase())
+        return alert("Cannot offer on your own NFT");
+
       const approvedAddress = await tokenContract.methods
         .getApproved(tokenId)
         .call();
-  
-      // Handle marketplace approval
-      if (approvedAddress !== marketplaceAddress) {
-        const confirmApproval = window.confirm(
-          "You need to approve the marketplace to handle this NFT. This requires a transaction."
-        );
-        
-        if (!confirmApproval) {
-          alert("Offer canceled: Marketplace approval required");
-          return;
-        }
-  
+      if (approvedAddress !== marketplaceContract.options.address) {
+        const confirm = window.confirm("Approve marketplace to proceed?");
+        if (!confirm) return alert("Approval required.");
         await tokenContract.methods
-          .approve(marketplaceAddress, tokenId)
+          .approve(marketplaceContract.options.address, tokenId)
           .send({ from: account });
       }
-  
-      // // Simulate transaction first
-      // await marketplaceContract.methods
-      //   .makeOffer(tokenId)
-      //   .call({ 
-      //     value: amountInWei, 
-      //     from: account 
-      //   });
-  
-      // Estimate gas with fallback
-      let gasEstimate;
-      try {
-        gasEstimate = await marketplaceContract.methods
-          .makeOffer(tokenId)
-          .estimateGas({ 
-            value: amountInWei, 
-            from: account 
-          });
-      } catch (estimateError) {
-        console.warn("Gas estimation failed, using fallback", estimateError);
-        gasEstimate = 30000000; // Fallback value
-      }
-  
-      // Add 20% buffer to gas estimate
-      const gasWithBuffer = Math.floor(gasEstimate * 1.2);
-  
-      // Send actual transaction
-      const receipt = await marketplaceContract.methods
-        .makeOffer(tokenId)
-        .send({
-          from: account,
-          value: amountInWei,
-          gas: gasWithBuffer
-        });
-  
-      console.log("Offer successful. Transaction receipt:", receipt);
-      alert("Offer placed successfully!");
-      
-      // Refresh offers list
-      await loadOffers();
+
+      await marketplaceContract.methods.makeOffer(tokenId).send({
+        from: account,
+        value: amountInWei,
+        gas: 300000,
+      });
+
+      alert("Offer placed!");
       setOfferAmount("");
-  
-    } catch (error) {
-      console.error("Offer failed:", error);
-  
-      // User-friendly error messages
-      let errorMessage = "Failed to make offer. Please try again.";
-      
-      if (error.message.includes("revert")) {
-        const revertReason = error.message.split("revert ")[1] || "Contract restriction";
-        errorMessage = `Transaction rejected: ${revertReason}`;
-      } else if (error.message.includes("insufficient funds")) {
-        errorMessage = "Insufficient ETH balance for this offer";
-      } else if (error.code === 4001) {
-        errorMessage = "Transaction rejected by user";
-      }
-  
-      alert(errorMessage);
-    }
-  }
-  async function acceptOffer(tokenId, offerIndex) {
-    try {
-      const receipt = await marketplaceContract.methods
-        .acceptOffer(tokenId, offerIndex)
-        .send({ gas: 210000, from: account });
-  
-      console.log(receipt);
-      alert("Offer accepted successfully!");
       loadOffers();
     } catch (error) {
-      console.error("Error accepting offer: ", error);
-      alert("Error while accepting offer!");
+      console.error("Offer failed:", error);
+      alert("Error submitting offer.");
     }
   }
 
-  async function withdrawOffer(tokenId, offerIndex) {
+  async function acceptOffer(tokenId, index) {
     try {
-      const receipt = await marketplaceContract.methods
-        .withdrawOffer(tokenId, offerIndex)
+      await marketplaceContract.methods
+        .acceptOffer(tokenId, index)
         .send({ gas: 210000, from: account });
-  
-      console.log(receipt);
-      alert("Offer withdrawn successfully!");
+      alert("Offer accepted!");
       loadOffers();
     } catch (error) {
-      console.error("Error withdrawing offer: ", error);
-      alert("Error while withdrawing offer!");
+      alert("Error accepting offer");
+      console.error(error);
     }
+  }
+
+  async function withdrawOffer(tokenId, index) {
+    try {
+      await marketplaceContract.methods
+        .withdrawOffer(tokenId, index)
+        .send({ gas: 210000, from: account });
+      alert("Offer withdrawn");
+      loadOffers();
+    } catch (error) {
+      alert("Error withdrawing offer");
+      console.error(error);
+    }
+  }
+
+  if (!tokenId) {
+    return (
+      <Box minHeight="100vh" display="flex" justifyContent="center" alignItems="center" bgcolor={softDark} color="white">
+        <Typography variant="h6">Loading NFT details...</Typography>
+      </Box>
+    );
   }
 
   return (
-    <div className={classes.pageItem}>
-      {Object.keys(nft).length === 0 ? (
-        <div>...CARREGANDO</div>
-      ) : (
-        <main>
-          <header className={classes.pageHeader}>
-            <Link to="/">
-              <KeyboardBackspaceIcon fontSize="large" />
-            </Link>
-          </header>
-          <section>
-            <Grid container 
-              spacing={0} 
-              alignItems="center"
-              justify="center"
-            >
-              <Grid item md={7} sm={7} xs={12}>
-                <figure> 
-                  <img className="ui fluid image" src={image} />
-                </figure>
-              </Grid>
-              <Grid item md={5} sm={5} xs={12}>
-                <fieldset>
-                  <h1>{name}</h1>
-                  <TextField
-                    label="creator"
-                    name="creator"
-                    variant="filled"
-                    margin="dense"
+    <Box minHeight="100vh" bgcolor={'black'} color={lightGray} py={6}>
+      <Container maxWidth="lg">
+        <Button
+          component={Link}
+          to="/"
+          startIcon={<ArrowBackIcon />}
+          variant="outlined"
+          style={{ color: lightGray, borderColor: lightGray, marginBottom: '2rem' }}
+        >
+          Back
+        </Button>
+
+        <Grid container spacing={6} alignItems="flex-start" mt={4}>
+          <Grid item xs={12} md={6}>
+            <Paper elevation={3} style={{ background: "#2a2a2a", padding: 16 }}>
+              <CardMedia
+                component="img"
+                src={image}
+                alt={name}
+                style={{ objectFit: "contain", maxHeight: 500 }}
+              />
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="h4" gutterBottom style={{ fontWeight: 600,color: "#facc15" }}>
+              {name}
+            </Typography>
+            <Typography variant="body2" color="inherit" style={{ fontWeight: 600 }}>
+              <strong>Creator:</strong> {creator.slice(0, 6)}...{creator.slice(-4)}
+            </Typography>
+            <Typography variant="body2" color="inherit" gutterBottom style={{ fontWeight: 600 }}>
+              <strong>Owner:</strong> {owner.slice(0, 6)}...{owner.slice(-4)}
+            </Typography>
+
+            <Box mt={3}>
+              <Typography variant="body1" style={{ fontWeight: 400 }}>
+                {description}
+              </Typography>
+            </Box>
+
+            <Box mt={3} >
+              <TextField
+                label="Current Price"
+                style={{ fontWeight: 400, fontSize: 16 }}
+                value={Web3.utils.fromWei(price.toString(), "ether") + " ETH"}
+                variant="outlined"
+                fullWidth
+                disabled
+                InputProps={{ style: { color: "white" } }}
+                InputLabelProps={{ style: { color: "white" } }}
+              />
+            </Box>
+
+            {owner === account && !isForSale && (
+              <Box {...sectionSpacing}>
+                <Typography variant="subtitle1" gutterBottom>
+                  List For Sale
+                </Typography>
+                <TextField
+                  label="Price in ETH"
+                  variant="outlined"
+                  fullWidth
+                  style={{ fontWeight: 400, fontSize: 16 }}
+                  value={priceInput}
+                  onChange={handlePriceChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">Ξ</InputAdornment>
+                    ),
+                    style: { color: "white" }
+                  }}
+                  InputLabelProps={{ style: { color: "white" } }}
+                />
+                <Box mt={2}>
+                  <Button
+                    variant="contained"
+                    color="primary"
                     fullWidth
-                    disabled
-                    defaultValue={
-                      creator.slice(0, 7) + "..." + creator.slice(-4)
-                    }
-                  />
-                  <TextField
-                    label="owner"
-                    name="owner"
-                    variant="filled"
-                    disabled
+                    onClick={() => putForSale(tokenId, priceInput)}
+                  >
+                    Sell
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
+            {owner !== account && isForSale && (
+              <Box {...sectionSpacing}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  onClick={() => buy(saleId, price)}
+                >
+                  Buy for {Web3.utils.fromWei(String(price), "ether")} ETH
+                </Button>
+              </Box>
+            )}
+
+            {owner !== account && (
+              <Box {...sectionSpacing}>
+                <Typography variant="h6" gutterBottom>
+                  Make an Offer
+                </Typography>
+                <TextField
+                  label="Your Offer (ETH)"
+                  variant="outlined"
+                  fullWidth
+                  value={offerAmount}
+                  onChange={handleOfferChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">Ξ</InputAdornment>
+                    ),
+                    style: { color: "white" }
+                  }}
+                  InputLabelProps={{ style: { color: "white" } }}
+                />
+                <Box mt={2}>
+                  <Button
+                    variant="outlined"
+                    color="inherit"
                     fullWidth
-                    margin="dense"
-                    defaultValue={owner.slice(0, 7) + "..." + owner.slice(-4)}
-                  />
-                  <TextField
-                    id="outlined-multiline-static"
-                    multiline
-                    rows={4}
-                    label="Description"
-                    name="description"
-                    variant="filled"
-                    margin="dense"
-                    disabled
-                    fullWidth
-                    defaultValue={description}
-                  />
-                  <TextField
-                    label="price"
-                    name="price"
-                    variant="filled"
-                    margin="dense"
-                    defaultValue={Web3.utils.fromWei(String(price), "ether")}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">ETH</InputAdornment>
-                      ),
-                    }}
-                    fullWidth
-                    disabled
-                  />
-                  
-                  {/* Owner Controls */}
-                  {owner === account && !isForSale && (
-                    <div>
-                      <TextField
-                        label="Price (ETH)"
-                        name="price"
-                        variant="filled"
-                        margin="dense"
-                        value={priceInput}
-                        onChange={handlePriceChange}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">ETH</InputAdornment>
-                          ),
-                        }}
-                        fullWidth
-                      />
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => putForSale(tokenId, priceInput)}
-                      >
-                        Sell
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {/* Buy Button - Only show if item is for sale */}
-                  {owner !== account && isForSale && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      fullWidth
-                      style={{ marginBottom: '20px' }}
-                      onClick={() => buy(saleId, price)}
-                    >
-                      Buy for {Web3.utils.fromWei(String(price), "ether")} ETH
-                    </Button>
-                  )}
-                  
-                  {/* Make Offer Section - Show for any non-owner, regardless of for sale status */}
-                  {owner !== account && (
-                    <div>
-                      <Divider style={{ margin: '20px 0' }} />
-                      
-                      <Typography variant="h6">Make an Offer</Typography>
-                      <TextField
-                        label="Offer Amount (ETH)"
-                        name="offerAmount"
-                        variant="filled"
-                        margin="dense"
-                        value={offerAmount}
-                        onChange={handleOfferChange}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">ETH</InputAdornment>
-                          ),
-                        }}
-                        fullWidth
-                      />
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        fullWidth
-                        onClick={() => makeOffer(tokenId, offerAmount)}
-                      >
-                        Submit Offer
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {/* Offers list for owner */}
-                  {owner === account && offers.length > 0 && (
-                    <div style={{ marginTop: '20px' }}>
-                      <Divider style={{ margin: '20px 0' }} />
-                      <Typography variant="h6">Offers Received</Typography>
-                      {isLoadingOffers ? (
-                        <p>Loading offers...</p>
-                      ) : (
-                        <List>
-                          {offers.map((offer, index) => (
-                            <ListItem key={index}>
+                    onClick={() => makeOffer(tokenId, offerAmount)}
+                  >
+                    Submit Offer
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
+            {/* Rest of the code remains the same */}
+            {isLoadingOffers ? (
+              <Box {...sectionSpacing} display="flex" alignItems="center">
+                <CircularProgress size={24} style={{ color: lightGray }} />
+                <Typography style={{ marginLeft: 10 }}>Loading offers...</Typography>
+              </Box>
+            ) : (
+              <>
+                {owner === account && offers.length > 0 && (
+                  <Box {...sectionSpacing}>
+                    <Typography variant="h6">Offers Received</Typography>
+                    <List>
+                      {offers.map((offer, i) => (
+                        <ListItem key={i} divider>
+                          <ListItemText
+                            primary={`From: ${offer.bidder.slice(0, 6)}...${offer.bidder.slice(-4)}`}
+                            secondary={
+                              <Typography style={{ color: '#fff' }}>
+                                {`${Web3.utils.fromWei(offer.amount, "ether")} ETH`}
+                              </Typography>
+                            }
+                          />
+                          <ListItemSecondaryAction>
+                            <IconButton
+                              edge="end"
+                              onClick={() => acceptOffer(tokenId, offer.index)}
+                            >
+                              <CheckIcon style={{ color: "limegreen" }} />
+                            </IconButton>
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+
+                {owner !== account &&
+                  offers.some(
+                    (o) => o.bidder.toLowerCase() === account.toLowerCase()
+                  ) && (
+                    <Box {...sectionSpacing}>
+                      <Typography variant="h6">Your Offers</Typography>
+                      <List>
+                        {offers
+                          .filter(
+                            (o) =>
+                              o.bidder.toLowerCase() === account.toLowerCase()
+                          )
+                          .map((offer, i) => (
+                            <ListItem key={i} divider>
                               <ListItemText
-                                primary={`${offer.bidder.slice(0, 7)}...${offer.bidder.slice(-4)}`}
-                                secondary={`${Web3.utils.fromWei(offer.amount, "ether")} ETH`}
+                                primary="Your Offer"
+
+                                secondary={`${Web3.utils.fromWei(
+                                  offer.amount,
+                                  "ether"
+                                )} ETH`}
                               />
                               <ListItemSecondaryAction>
-                                <IconButton 
-                                  edge="end" 
-                                  aria-label="accept"
-                                  onClick={() => acceptOffer(tokenId, offer.index)}
+                                <IconButton
+                                  edge="end"
+                                  onClick={() =>
+                                    withdrawOffer(tokenId, offer.index)
+                                  }
                                 >
-                                  <CheckIcon color="primary" />
+                                  <CloseIcon style={{ color: "tomato" }} />
                                 </IconButton>
                               </ListItemSecondaryAction>
                             </ListItem>
                           ))}
-                        </List>
-                      )}
-                    </div>
+                      </List>
+                    </Box>
                   )}
-                  
-                  {/* User's own offers with withdraw option */}
-                  {owner !== account && offers.filter(offer => 
-                    offer.bidder.toLowerCase() === account.toLowerCase()
-                  ).length > 0 && (
-                    <div style={{ marginTop: '20px' }}>
-                      <Divider style={{ margin: '20px 0' }} />
-                      <Typography variant="h6">Your Offers</Typography>
-                      {isLoadingOffers ? (
-                        <p>Loading your offers...</p>
-                      ) : (
-                        <List>
-                          {offers
-                            .filter(offer => offer.bidder.toLowerCase() === account.toLowerCase())
-                            .map((offer, index) => (
-                              <ListItem key={index}>
-                                <ListItemText
-                                  primary="Your offer"
-                                  secondary={`${Web3.utils.fromWei(offer.amount, "ether")} ETH`}
-                                />
-                                <ListItemSecondaryAction>
-                                  <IconButton 
-                                    edge="end" 
-                                    aria-label="withdraw"
-                                    onClick={() => withdrawOffer(tokenId, offer.index)}
-                                  >
-                                    <CloseIcon color="secondary" />
-                                  </IconButton>
-                                </ListItemSecondaryAction>
-                              </ListItem>
-                            ))}
-                        </List>
-                      )}
-                    </div>
-                  )}
-                </fieldset>
-              </Grid>
-            </Grid>
-          </section>
-        </main>
-      )}
-    </div>
+              </>
+            )}
+          </Grid>
+        </Grid>
+      </Container>
+    </Box>
   );
 };
 

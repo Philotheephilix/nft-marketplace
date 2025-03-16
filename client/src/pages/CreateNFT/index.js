@@ -98,10 +98,10 @@ const CreateNFT = () => {
           </Link>
         </div>
         <div className={classes.content}>
-          <div className={classes.dropzone}>
+          <div style={{color:'black'}} className={classes.dropzone}>
             <DropZone onFileUploaded={setSelectedFile} />
           </div>
-          <fieldset>
+          <fieldset className={classes.fieldset}>
             <TextField
               label="Title"
               name="title"
@@ -132,12 +132,12 @@ const CreateNFT = () => {
               onChange={handleInputChange}
               InputProps={{
                 inputProps: { min: 0.01, step: 0.01 },
-                startAdornment: <InputAdornment position="start">ETH</InputAdornment>,
+                style:{color: "#fff"},
+                startAdornment: <span position="start" style={{ color: '#fff',paddingTop: "1rem" }}>ETH</span>,
               }}
               fullWidth
             />
-
-            <Button variant="contained" color="primary" type="submit">
+            <Button className={classes.createButton} type="submit">
               Create NFT
             </Button>
           </fieldset>
