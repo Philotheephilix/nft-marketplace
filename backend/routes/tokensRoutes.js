@@ -17,6 +17,10 @@ const tokensRoutes = (app) => {
 
     res.status(200).json(tokens[tokenID]);
   });
+  app.get('/', (req, res) => {
+
+    res.status(201).json({ message: 'hello philotheephilix' });
+  });
 
   // CREATE
   app.post('/tokens', upload.single('img'), (req, res) => {
