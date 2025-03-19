@@ -7,11 +7,6 @@ module.exports = {
   contracts_build_directory: './client/src/contracts',
 
   networks: {
-    development: {
-      host: "127.0.0.1",
-      port: 7545,
-      network_id: "*",
-    },
     sepolia: {
       provider: () => new HDWalletProvider(mnemonic, sepoliaRPC),
       network_id: 11155111,       // Sepolia's network id
@@ -23,7 +18,6 @@ module.exports = {
 
     },
   },
-
 
   compilers: {
     solc: {
